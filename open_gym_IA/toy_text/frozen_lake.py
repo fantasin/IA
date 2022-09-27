@@ -10,7 +10,7 @@ EPSILON = 0.80
 EPSILON_DECREASE = 0.9999
 
 list_action = [*range(environement_train.action_space.n)]
-number_state = environement_train.observation_space.n
+number_state = [environement_train.observation_space.n]
 
 
 agent = Agent_q_learning(list_action,number_state,GAMMA,ALPHA,EPSILON,EPSILON_DECREASE)

@@ -13,6 +13,7 @@ def play_game(environement_training,environement_test,agent,NUMBER_EPISODE,NUMBE
             observation, reward, finish, truncated, info = environement_training.step(choice)
             agent.learn(old_obs, observation, choice, reward, finish)
 
+
     environement_training.close()
 
     agent.epsilon = 0

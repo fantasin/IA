@@ -4,12 +4,11 @@ import random
 import numpy as np
 
 class Agent_q_learning:
-    def __init__(self,list_action,number_state,gamma,alpha,epsilon,decrease_espilon = None):
+    def __init__(self,list_action,univers,gamma,alpha,epsilon,decrease_espilon = None):
         """
         :param list_action: liste des différents actions (int)
 
-        :param number_state: dictionnaire qui lie les états ensembles, la clef est l'état actuelle et la valeur
-        est une liste d'état possiblement joignable
+        :param state_shape: tuple of the state different maximal state per dim  exemple (5,6,3)
 
         :param gamma: discount value, entre 0 et 1
 
@@ -21,7 +20,7 @@ class Agent_q_learning:
 
         """
         self.list_action = list_action
-        self.number_state = number_state
+        self.univers = univers
         self.gamme = gamma
         self.alpha = alpha
         self.epsilon = epsilon
@@ -31,9 +30,14 @@ class Agent_q_learning:
 
 
     def _create_q_table(self):
-        self.q_table = np.zeros((self.number_state,self.number_action))
+        tmp = []
+        for elem in self.univers:
+            tmp.append(elem)
+        tmp.append(self.number_action)
+        self.q_table = np.zeros(tuple(tmp))
 
     def make_choice(self,current_state):
+        current_state = self.convert_state(current_state)
         random_value = random.random()
         if  random_value < self.epsilon:
             action = [random.choice(self.list_action)]
@@ -43,13 +47,13 @@ class Agent_q_learning:
             for i in range(self.number_action):
                 if best_action == None:
                     best_action = i
-                    best_value = self.q_table[current_state,i]
+                    best_value = self._go_through_state(current_state)[i]
                     action = [i]
-                elif self.q_table[current_state,i] > best_value:
+                elif self._go_through_state(current_state)[i] > best_value:
                     best_action = i
-                    best_value = self.q_table[current_state,i]
+                    best_value = self._go_through_state(current_state)[i]
                     action = [i]
-                elif self.q_table[current_state,i] == best_value:
+                elif self._go_through_state(current_state)[i] == best_value:
                     action.append(i)
 
         self.epsilon = self.epsilon * self.decrease_espilon
@@ -58,20 +62,31 @@ class Agent_q_learning:
         return rep
 
     def learn(self,current_state,new_state,action,reward,done):
-
-
+        current_state = self.convert_state(current_state)
+        new_state = self.convert_state(new_state)
         if done :
-            self.q_table[current_state,action] = (1-self.alpha) * self.q_table[current_state,action] \
+            self._go_through_state(current_state)[action] = (1-self.alpha) * self._go_through_state(current_state)[action] \
                                               + self.alpha * (reward)
         else:
-            self.q_table[current_state,action] = (1-self.alpha) * self.q_table[current_state,action] \
+            self._go_through_state(current_state)[action] = (1-self.alpha) * self._go_through_state(current_state)[action] \
                                                   + self.alpha * (reward + self.gamme * self._maxQ(new_state))
 
 
     def _maxQ(self,new_state):
         best_q = float('-inf')
         for i in range(self.number_action):
-            if self.q_table[new_state,i] > best_q:
-                best_q = self.q_table[new_state,i]
-
+            if self._go_through_state(new_state)[i] > best_q:
+                best_q = self._go_through_state(new_state)[i]
         return best_q
+
+    def _go_through_state(self,tuple_state):
+        rep = self.q_table
+        for elem in tuple_state:
+            rep = rep[elem]
+        return rep
+
+    def convert_state(self,state):
+        if type(state) != tuple and type(state) != list:
+            state = [state]
+
+        return state
