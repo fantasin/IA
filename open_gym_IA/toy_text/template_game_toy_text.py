@@ -1,3 +1,6 @@
+import time
+
+
 def play_game(environement_training,environement_test,agent,NUMBER_EPISODE,NUMBER_TEST):
     print("Begin training")
     for episode in range(NUMBER_EPISODE):
@@ -27,5 +30,6 @@ def play_game(environement_training,environement_test,agent,NUMBER_EPISODE,NUMBE
         while not finish:
             choice = agent.make_choice(observation)
             observation, reward, finish, truncated, info = environement_test.step(choice)
+
 
     environement_test.close()

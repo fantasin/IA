@@ -82,7 +82,7 @@ class Agent_q_learning:
     def _go_through_state(self,tuple_state):
         rep = self.q_table
         for elem in tuple_state:
-            rep = rep[elem]
+            rep = rep[int(elem)] #TODO REMPLACE PAR UN DICO ACTION => int
         return rep
 
     def convert_state(self,state):
