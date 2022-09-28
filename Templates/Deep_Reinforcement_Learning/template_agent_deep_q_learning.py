@@ -8,21 +8,22 @@ class Agent_DQN:
         self.alpha = alpha
         self.epsilon = epsilon
         self.decrease_espilon = decrease_espilon
-        self.METRIC = ["acc"]
 
         self.main_network = self._create_network(number_element_state,number_action,optimizer,function_loss,number_hidden_layer,function_activation,metric )
         self.target_network = deepcopy(self.main_network)
 
     def learn(self,old,new):
-        history = ANN.fit(xTrain,
-                          yTrain,
-                          epochs=NUMBER_EPOCH,
-                          batch_size=BATCH_SIZE,
-                          validation_data=(xTest, yTest),
-                          verbose=0)
+        pass #TODO
 
+    def _maxQ(self,new_state):
+        rep = self.target_network.predict(new_state)
+        return max(rep)
     def make_choice(self,obs):
-        prediction = ANN.predict(data_to_predict)
+        prediction = self.main_network.predict(obs)
+
+
+    def _do_action_replay(self):
+        pass
 
     def _create_network(self,number_element_state,number_action,optimizer,function_loss,number_hidden_layer,function_activation,metric):
         model = Sequential()
