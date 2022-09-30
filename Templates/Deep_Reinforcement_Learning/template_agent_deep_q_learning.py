@@ -1,31 +1,59 @@
+from tensorflow import keras
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 from copy import deepcopy
-class Agent_DQN:
-    def __init__(self,number_action,number_element_state,gamma,alpha,epsilon,decrease_espilon,
-                 optimizer ,function_loss,number_hidden_layer,metric):
-        self.gamme = gamma
-        self.alpha = alpha
-        self.epsilon = epsilon
-        self.decrease_espilon = decrease_espilon
 
-        self.main_network = self._create_network(number_element_state,number_action,optimizer,function_loss,number_hidden_layer,function_activation,metric )
+import tensorflow as tf
+from tensorflow import keras
+
+optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
+loss_function = keras.losses.Huber()
+
+
+class Agent_DQN:
+    def __init__(self,environement_information, IA_information, parameter_information):
+
+        self.gamme,self.alpha,self.epsilon,self.decrease_espilon = parameter_information
+        self.main_network = self._create_network(environement_information, IA_information )
         self.target_network = deepcopy(self.main_network)
 
-    def learn(self,old,new):
-        pass #TODO
+    def learn(self,current_state,new_state,action,reward,done):
+        list_action = self.main_network.predict(current_state)
+        q = list_action[action]
+        old_q = q
+        if done :
+            q = (1-self.alpha) * q + self.alpha * (reward)
+        else:
+            q = (1-self.alpha) * q + self.alpha * (reward + self.gamme * self._maxQ(new_state))
+
+
+        loss = loss_function(q, old_q)
+
+        # Backpropagation
+        grads = tf.GradientTape().gradient(loss, self.main_network.trainable_variables)
+        optimizer.apply_gradients(zip(grads, self.main_network.trainable_variables))
+
+
 
     def _maxQ(self,new_state):
         rep = self.target_network.predict(new_state)
         return max(rep)
+
     def make_choice(self,obs):
         prediction = self.main_network.predict(obs)
+        max_value = max(prediction)
+        max_index = prediction.index(max_value)
+        return max_index
 
 
-    def _do_action_replay(self):
-        pass
+    def copy_neuronal_network(self):
+        self.target_network = deepcopy(self.main_network)
 
-    def _create_network(self,number_element_state,number_action,optimizer,function_loss,number_hidden_layer,function_activation,metric):
+
+    def _create_network(self, environement_information, IA_information):
+        number_element_state, number_action = environement_information
+        optimizer, function_loss, number_hidden_layer, function_activation, metric = IA_information
+
         model = Sequential()
         model.add(
             Dense(number_hidden_layer, activation=function_activation, input_shape=(number_element_state,)))
@@ -33,7 +61,8 @@ class Agent_DQN:
             model.add(Dense(units=number_hidden_layer, activation=function_activation))
 
 
-        model.add(Dense(number_action, activation=FUNCTION_OUTPOUT))
+
+        model.add(Dense(number_action, activation="linear"))
         model.compile(optimizer=optimizer, loss=function_loss, metrics=metric)
         return model
 
