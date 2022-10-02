@@ -27,11 +27,22 @@ EPSILON_DECREASE = 0.9999
 
 
 parameter_information =  (GAMMA, ALPHA, EPSILON, EPSILON_DECREASE)
-number_element_state, number_action = environement_information
-optimizer, function_loss, number_hidden_layer, function_activation, metric = IA_information
 
-environement_information = ()
+number_element_state, number_action = 8,4
 
-agent = Agent_DQN()
+environement_information = (number_element_state, number_action)
 
-play_game()
+
+
+
+
+
+SIZE_REPLAY_EXPERIENCE,TIME_STEP_BEFORE_TRAINING,TIME_STEP_BEFORE_COPY,NUMBER_EPISODE,NUMBER_TEST = 120,20,400,1000,1
+
+
+
+number_hidden_layer,neurones = 2,128
+
+agent = Agent_DQN(number_element_state, number_action, number_hidden_layer,neurones, parameter_information)
+
+play_game(environement_training,environement_test,agent, SIZE_REPLAY_EXPERIENCE,TIME_STEP_BEFORE_TRAINING,TIME_STEP_BEFORE_COPY,NUMBER_EPISODE,NUMBER_TEST)
