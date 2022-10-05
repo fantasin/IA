@@ -1,48 +1,96 @@
-from template_game_classic_controle import play_game
 from Templates.Deep_Reinforcement_Learning.template_agent_deep_q_learning import Agent_DQN
 
 import gym
 environement_training = gym.make(
-    "LunarLander-v2",
-    continuous = False,
-    gravity = -10.0,
-    enable_wind = False,
-    wind_power = 15.0,
-    turbulence_power = 1.5)
+    "LunarLander-v2")
 
 environement_test = gym.make(
     "LunarLander-v2",
-    continuous = False,
-    gravity = -10.0,
-    enable_wind = False,
-    wind_power = 15.0,
-    turbulence_power = 1.5,
     render_mode="human")
 
 
 ALPHA = 0.1
 GAMMA = 0.999
 EPSILON = 0.80
-EPSILON_DECREASE = 0.9999
+EPSILON_DECREASE = 0.9999999
+EPSILON_MINIMAL = 0.1
 
-
-parameter_information =  (GAMMA, ALPHA, EPSILON, EPSILON_DECREASE)
 
 number_element_state, number_action = 8,4
 
-environement_information = (number_element_state, number_action)
+TIME_STEP_BEFORE_TRAINING = 20
+TIME_STEP_BEFORE_COPY = 50
+NUMBER_EPISODE = 1000
+NUMBER_TEST = 1
+BATCH_SIZE = 64
+
+BUFFER_SIZE = 2000
+number_hidden_layer,neurones = 2,256
+
+agent = Agent_DQN(number_element_state, number_action, number_hidden_layer,neurones, GAMMA,ALPHA,EPSILON,EPSILON_MINIMAL,EPSILON_DECREASE,BUFFER_SIZE)
+
+SHOW_EACH = 50
+
+
+time_step = 1
+print("Begin training")
+
+environement = environement_training
+for episode in range(NUMBER_EPISODE):
+    finish = False
+    truncated = False
+    cumulative_reward = 0
+    observation = environement.reset()[0]
+
+    if (episode+1)%SHOW_EACH == 0:
+        environement = environement_test
+
+    else:
+        environement = environement_training
+
+    observation = environement.reset()[0]
+
+
+    while not (finish or truncated):
+        choice = agent.make_choice(observation)
+        old_obs = observation
+        observation, reward, finish, truncated, info = environement.step(choice)
+        cumulative_reward += reward
+        end = False
+        if finish or truncated:
+            end = True
+        agent.add_into_action_buffer(old_obs, choice, reward, observation,end)
+
+        if time_step%TIME_STEP_BEFORE_TRAINING == 0:
+            agent.learn(BATCH_SIZE)
+
+        if time_step%TIME_STEP_BEFORE_COPY == 0:
+            agent.copy_neuronal_network()
+
+        time_step += 1
+
+
+    print("Episode :", episode, "Reward :",cumulative_reward)
 
 
 
 
 
+agent.save()
 
-SIZE_REPLAY_EXPERIENCE,TIME_STEP_BEFORE_TRAINING,TIME_STEP_BEFORE_COPY,NUMBER_EPISODE,NUMBER_TEST = 120,20,400,1000,1
+environement_training.close()
+
+agent.epsilon = 0
 
 
+print("Begin testing")
+for i in range(NUMBER_TEST):
+    finish = False
+    observation = environement_test.reset()[0]
 
-number_hidden_layer,neurones = 2,128
+    while not finish:
+        choice = agent.make_choice(observation)
+        observation, reward, finish, truncated, info = environement_test.step(choice)
 
-agent = Agent_DQN(number_element_state, number_action, number_hidden_layer,neurones, parameter_information)
 
-play_game(environement_training,environement_test,agent, SIZE_REPLAY_EXPERIENCE,TIME_STEP_BEFORE_TRAINING,TIME_STEP_BEFORE_COPY,NUMBER_EPISODE,NUMBER_TEST)
+environement_test.close()
